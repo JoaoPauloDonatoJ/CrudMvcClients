@@ -1,0 +1,31 @@
+## Build
+bin/
+obj/
+
+## Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Logs
+*.log
+
+## Database
+*.mdf
+*.ldf
+
+## Rider / VS Code
+.idea/
+.vscode/
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Environment
+appsettings.Development.json
+
+## Publish
+publish/
