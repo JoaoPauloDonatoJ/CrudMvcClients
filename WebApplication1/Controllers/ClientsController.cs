@@ -7,22 +7,26 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
+using WebApplication1.Services;
 
 namespace WebApplication1.Controllers
 {
     public class ClientsController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IClientService _services;
 
-        public ClientsController(AppDbContext context)
+        public ClientsController(AppDbContext context, IClientService services)
         {
             _context = context;
+            _services = services;
         }
 
         // GET: Clients
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Clients.ToListAsync());
+            var clients = await _services.GetAll();
+            return View(clients);
         }
 
         // GET: Clients/Details/5
