@@ -10,5 +10,6 @@ namespace WebApplication1.Repositories
         Task<Client> Update(Client client);
         Task<Client> Remove(int id);
         Task<bool> EmailExist(string email);
+        Task SaveChangesAsync();
     }
 }

@@ -1,13 +1,14 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
 using WebApplication1.Services;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxTokenParser;
 
 namespace WebApplication1.Controllers
 {
@@ -59,24 +60,29 @@ namespace WebApplication1.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Client client)
-        {   
-            if (ModelState.IsValid)
-            {
-                client.Ativo = true;
-
-                var emailExist = await _context.Clients
-                    .AnyAsync(c => c.Email == client.Email);
-
-                if (emailExist)
+        {
+            
+                if (!ModelState.IsValid)
                 {
-                    ModelState.AddModelError("Email", "Email já cadastrado.");
                     return View(client);
                 }
-                _context.Add(client);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(client);
+
+                var result = await _services.Create(client);
+
+                if (!result.Success)
+                {
+                    // Caso ocorra um erro (ex: cliente não existe ou erro de banco)
+                    ModelState.AddModelError("", result.Message);
+                    return View(client);
+                }
+
+
+                    TempData["Success"] = "Cliente criado com sucesso!";
+                    return RedirectToAction(nameof(Index));
+                
+
+                //return View(client);
+            
         }
 
         // GET: Clients/Edit/5
@@ -87,7 +93,7 @@ namespace WebApplication1.Controllers
                 return NotFound();
             }
 
-            var client = await _context.Clients.FindAsync(id);
+            var client = await _services.GetById(id.Value);
             if (client == null)
             {
                 return NotFound();
@@ -102,33 +108,41 @@ namespace WebApplication1.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Client client)
         {
+
             if (id != client.Id)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(client);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ClientExists(client.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
+                return View(client);
+            }
+
+            var result = await _services.Update(client);
+
+            if (!result.Success)
+            {
+                // Caso ocorra um erro (ex: cliente não existe ou erro de banco)
+                ModelState.AddModelError("", result.Message);
+                return View(client);
+            }
+
+            if (!result.HasChanges)
+            {
+                // Cenário: O usuário clicou em salvar sem mudar nada
+                TempData["Warning"] = "Nenhuma alteração foi detectada. O registro permanece o mesmo.";
                 return RedirectToAction(nameof(Index));
             }
-            return View(client);
+
+            // Cenário: Sucesso total com alteração no banco
+            TempData["Success"] = "Cliente atualizado com sucesso!";
+            return RedirectToAction(nameof(Index));
+
+            //return View(client);
         }
+            
+        
 
         // GET: Clients/Delete/5
         public async Task<IActionResult> Delete(int? id)

@@ -28,25 +28,61 @@ namespace WebApplication1.Services
 
         }
 
-        public async Task<Client> Create(Client client)
+        public async Task<ServiceResult<Client>> Create(Client client)
         {
-            client.Ativo = true;
-
-            var emailExist = await _repository.EmailExist(client.Email);
-
-            if (emailExist)
+            try
             {
-                throw new InvalidOperationException("Email já cadastrado");
+                var emailExist = await _repository.EmailExist(client.Email);
+
+                if (emailExist)
+                {
+                    throw new InvalidOperationException("Email já cadastrado");
+                }
+
+                client.Ativo = true;
+                client.DataCadastro = DateTime.Now;
+
+                 await _repository.Add(client);
+                return ServiceResult<Client>.Ok(client);
             }
-
-            client.DataCadastro = DateTime.Now;
-
-            return await _repository.Add(client);
+            catch (Exception ex)
+            {
+                throw new Exception($"Ocorreu um erro na criação do cliente: {ex.Message}", ex);
+            }
         }
 
-        public async Task<Client> Update(Client client)
+        public async Task<ServiceResult<Client>> Update(Client client)
         {
-            return await _repository.Update(client);
+            try
+            {
+                var existingClient = await _repository.GetById(client.Id);
+
+                if (existingClient == null)
+                {
+                    throw new KeyNotFoundException("Cliente não localizado");
+                }
+
+                //Comparando os dados, se forem identicos ele marca como sem alterações
+                if (existingClient.Nome == client.Nome && 
+                    existingClient.Email == client.Email && 
+                    existingClient.Ativo == client.Ativo)
+                {
+                    return ServiceResult<Client>.NoChanges(existingClient);
+                }
+
+                // 3. ATUALIZA as propriedades do objeto rastreado com os novos valores
+                existingClient.Nome = client.Nome;
+                existingClient.Email = client.Email;
+                existingClient.Ativo = client.Ativo;
+
+                await _repository.SaveChangesAsync();
+                return ServiceResult<Client>.Ok(existingClient);
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ocorreu um erro na atualização do cliente: {ex.Message}", ex);
+            }
         }
 
         public async Task<Client> Delete(int id)
