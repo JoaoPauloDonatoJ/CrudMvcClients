@@ -29,18 +29,6 @@ namespace WebApplication1.Repositories
 
         public async Task<Client> Add(Client client)
         {
-           
-            //client.Ativo = true;
-
-            //var emailExist = await _context.Clients
-            //    .AnyAsync(c => c.Email == client.Email);
-
-            //if (emailExist)
-            //{
-            //    throw new InvalidOperationException("Email já cadastrado");
-            //}
-
-
             _context.Clients.Add(client);
             await _context.SaveChangesAsync();
 
@@ -49,33 +37,20 @@ namespace WebApplication1.Repositories
 
         public async Task<Client> Update(Client client)
         {
-
-            //if (client.id == null)
-            //{
-            //    return NotFound();
-            //}
-
-            //var client = await _context.Clients.FindAsync(id);
-            //if (client == null)
-            //{
-            //    return NotFound();
-            //}
-            //return View(client);
-
             _context.Clients.Update(client);
             await _context.SaveChangesAsync();
             return client;
+        }
+
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
         }
 
         public async Task<Client> Remove(int id)
         {
             var client = await _context.Clients.FindAsync(id);
 
-            //if (client == null)
-            //{
-            //    throw new KeyNotFoundException("Cliente não localizado");
-            //    //return NotFound();
-            //}
             _context.Clients.Remove(client);
             await _context.SaveChangesAsync();
             return client;
