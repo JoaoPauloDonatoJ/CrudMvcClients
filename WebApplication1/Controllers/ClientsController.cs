@@ -9,6 +9,7 @@ using WebApplication1.Data;
 using WebApplication1.Models;
 using WebApplication1.Services;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxTokenParser;
+using WebApplication1.DTOs;
 
 namespace WebApplication1.Controllers
 {
@@ -38,14 +39,14 @@ namespace WebApplication1.Controllers
                 return NotFound();
             }
 
-            var client = await _context.Clients
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (client == null)
+            var client = await _services.GetById(id.Value);
+
+            if (!client.Success)
             {
-                return NotFound();
+                return NotFound(client.Message);
             }
 
-            return View(client);
+            return View(client.Data);
         }
 
         // GET: Clients/Create
@@ -59,21 +60,21 @@ namespace WebApplication1.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Client client)
+        public async Task<IActionResult> Create(ClientCreateDto clientDto)
         {
             
                 if (!ModelState.IsValid)
                 {
-                    return View(client);
+                    return View(clientDto);
                 }
 
-                var result = await _services.Create(client);
+                var result = await _services.Create(clientDto);
 
                 if (!result.Success)
                 {
                     // Caso ocorra um erro (ex: cliente não existe ou erro de banco)
                     ModelState.AddModelError("", result.Message);
-                    return View(client);
+                    return View(clientDto);
                 }
 
 
@@ -106,26 +107,26 @@ namespace WebApplication1.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Client client)
+        public async Task<IActionResult> Edit(int id, ClientUpdateDto clientUpdateDto)
         {
 
-            if (id != client.Id)
+            if (id != clientUpdateDto.Id)
             {
                 return NotFound();
             }
 
             if (!ModelState.IsValid)
             {
-                return View(client);
+                return View(clientUpdateDto);
             }
 
-            var result = await _services.Update(client);
+            var result = await _services.Update(clientUpdateDto);
 
             if (!result.Success)
             {
                 // Caso ocorra um erro (ex: cliente não existe ou erro de banco)
                 ModelState.AddModelError("", result.Message);
-                return View(client);
+                return View(clientUpdateDto);
             }
 
             if (!result.HasChanges)
@@ -139,7 +140,7 @@ namespace WebApplication1.Controllers
             TempData["Success"] = "Cliente atualizado com sucesso!";
             return RedirectToAction(nameof(Index));
 
-            //return View(client);
+            
         }
             
         
@@ -152,14 +153,13 @@ namespace WebApplication1.Controllers
                 return NotFound();
             }
 
-            var client = await _context.Clients
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (client == null)
+            var client = await _services.GetById(id.Value);
+            if (!client.Success)
             {
-                return NotFound();
+                return NotFound(client.Message);
             }
 
-            return View(client);
+            return View(client.Data);
         }
 
         // POST: Clients/Delete/5
