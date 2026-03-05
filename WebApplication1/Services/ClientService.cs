@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using WebApplication1.Models;
 using WebApplication1.Repositories;
+using WebApplication1.DTOs;
 
 namespace WebApplication1.Services
 {
@@ -14,74 +15,119 @@ namespace WebApplication1.Services
             _repository = repository;
         }
 
-        public async Task<IEnumerable<Client>> GetAll()
-            => await _repository.GetAll();
+        public async Task<IEnumerable<ClientReponseDto>> GetAll()
+        {
+            var clients = await _repository.GetAll();
 
-        public async Task<Client> GetById(int id)
+            return clients.Select(c => new ClientReponseDto
+            {
+                Id = c.Id,
+                Nome = c.Nome,
+                Email = c.Email,
+                Ativo = c.Ativo,
+                DataCadastro = c.DataCadastro
+            }).ToList();
+        }
+
+
+        public async Task<ServiceResult<ClientReponseDto>> GetById(int id)
         {
             var client = await _repository.GetById(id);
 
             if (client == null)
-                throw new KeyNotFoundException("Cliente não localizado");
+                return ServiceResult<ClientReponseDto>.Failure("Cliente não localizado");
 
-            return client;
+            var responseDto = MapToResponse(client);
+
+            
+            return ServiceResult<ClientReponseDto>.Ok(responseDto);
 
         }
 
-        public async Task<ServiceResult<Client>> Create(Client client)
+        public async Task<ServiceResult<ClientReponseDto>> Create(ClientCreateDto clientDto)
         {
             try
             {
-                var emailExist = await _repository.EmailExist(client.Email);
+                var emailExist = await _repository.EmailExist(clientDto.Email);
 
                 if (emailExist)
                 {
-                    throw new InvalidOperationException("Email já cadastrado");
+                    return ServiceResult<ClientReponseDto>.Failure("Este e-mail já está cadastrado no sistema.");
                 }
 
-                client.Ativo = true;
-                client.DataCadastro = DateTime.Now;
+                 //Mapeamento DTO -> Model (Entidade)
+                var newClient = new Client
+                {
+                    Email = clientDto.Email,
+                    Nome = clientDto.Nome,
+                    Ativo = true,
+                    DataCadastro = DateTime.Now
+                };
 
-                 await _repository.Add(client);
-                return ServiceResult<Client>.Ok(client);
+                await _repository.Add(newClient);
+                await _repository.SaveChangesAsync();
+
+                // 4. Mapeamento Model -> Response Dto
+                // Agora o newClient JÁ POSSUI o Id preenchido pelo banco
+                var response = new ClientReponseDto
+                {
+                    Id = newClient.Id,
+                    Nome = newClient.Nome,
+                    Email = newClient.Email,
+                    Ativo = newClient.Ativo,
+                    DataCadastro = newClient.DataCadastro
+                };
+
+                return ServiceResult<ClientReponseDto>.Ok(response);
             }
             catch (Exception ex)
             {
-                throw new Exception($"Ocorreu um erro na criação do cliente: {ex.Message}", ex);
+                return ServiceResult<ClientReponseDto>.Failure($"Erro interno: {ex.Message}");
             }
         }
 
-        public async Task<ServiceResult<Client>> Update(Client client)
+        public async Task<ServiceResult<ClientReponseDto>> Update(ClientUpdateDto clientUpdateDto)
         {
             try
             {
-                var existingClient = await _repository.GetById(client.Id);
+                var existingClient = await _repository.GetById(clientUpdateDto.Id);
 
                 if (existingClient == null)
                 {
-                    throw new KeyNotFoundException("Cliente não localizado");
+                    return ServiceResult<ClientReponseDto>.Failure("Cliente não localizado");
                 }
 
                 //Comparando os dados, se forem identicos ele marca como sem alterações
-                if (existingClient.Nome == client.Nome && 
-                    existingClient.Email == client.Email && 
-                    existingClient.Ativo == client.Ativo)
+                if (existingClient.Nome == clientUpdateDto.Nome && 
+                    existingClient.Email == clientUpdateDto.Email && 
+                    existingClient.Ativo == clientUpdateDto.Ativo)
                 {
-                    return ServiceResult<Client>.NoChanges(existingClient);
+                   
+                    return ServiceResult<ClientReponseDto>.NoChanges(MapToResponse(existingClient));
                 }
 
                 // 3. ATUALIZA as propriedades do objeto rastreado com os novos valores
-                existingClient.Nome = client.Nome;
-                existingClient.Email = client.Email;
-                existingClient.Ativo = client.Ativo;
+                existingClient.Nome = clientUpdateDto.Nome;
+                existingClient.Email = clientUpdateDto.Email;
+                existingClient.Ativo = clientUpdateDto.Ativo;
+
+                // Criamos o DTO de resposta manualmente aqui
+                var responseDto = new ClientReponseDto
+                {
+                    Id = existingClient.Id,
+                    Nome = existingClient.Nome,
+                    Email = existingClient.Email,
+                    Ativo = existingClient.Ativo,
+                    DataCadastro = existingClient.DataCadastro
+                };
 
                 await _repository.SaveChangesAsync();
-                return ServiceResult<Client>.Ok(existingClient);
+                return ServiceResult<ClientReponseDto>.Ok(responseDto);
 
             }
             catch (Exception ex)
             {
-                throw new Exception($"Ocorreu um erro na atualização do cliente: {ex.Message}", ex);
+                return ServiceResult<ClientReponseDto>.Failure($"Ocorreu um erro na atualização do cliente: {ex.Message}");
             }
         }
 
@@ -93,6 +139,18 @@ namespace WebApplication1.Services
         public async Task<bool> EmailExist(string email)
         {
             return await _repository.EmailExist(email);
+        }
+
+        private ClientReponseDto MapToResponse(Client client)
+        {
+            return new ClientReponseDto
+            {
+                Id = client.Id,
+                Nome = client.Nome,
+                Email = client.Email,
+                Ativo = client.Ativo,
+                DataCadastro = client.DataCadastro
+            };
         }
     }
 }
