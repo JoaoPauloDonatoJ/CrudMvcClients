@@ -46,8 +46,7 @@ namespace WebApplication1.Services
 
         public async Task<ServiceResult<ClientReponseDto>> Create(ClientCreateDto clientDto)
         {
-            try
-            {
+            
                 var emailExist = await _repository.EmailExist(clientDto.Email);
 
                 if (emailExist)
@@ -79,17 +78,13 @@ namespace WebApplication1.Services
                 };
 
                 return ServiceResult<ClientReponseDto>.Ok(response);
-            }
-            catch (Exception ex)
-            {
-                return ServiceResult<ClientReponseDto>.Failure($"Erro interno: {ex.Message}");
-            }
+            
+            
         }
 
         public async Task<ServiceResult<ClientReponseDto>> Update(ClientUpdateDto clientUpdateDto)
         {
-            try
-            {
+            
                 var existingClient = await _repository.GetById(clientUpdateDto.Id);
 
                 if (existingClient == null)
@@ -124,11 +119,7 @@ namespace WebApplication1.Services
                 await _repository.SaveChangesAsync();
                 return ServiceResult<ClientReponseDto>.Ok(responseDto);
 
-            }
-            catch (Exception ex)
-            {
-                return ServiceResult<ClientReponseDto>.Failure($"Ocorreu um erro na atualização do cliente: {ex.Message}");
-            }
+            
         }
 
         public async Task<Client> Delete(int id)
