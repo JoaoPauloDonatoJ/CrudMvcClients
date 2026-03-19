@@ -13,12 +13,21 @@ namespace WebApplication1.Repositories
             _context = context;
         }
 
+        //public async Task<IEnumerable<Client>> GetAll()
+        //    => await _context.Clients.ToListAsync();
         public async Task<IEnumerable<Client>> GetAll()
-            => await _context.Clients.ToListAsync();
+        {
+            return await _context.Clients
+                .Include(c => c.User)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+            
 
         public async Task<Client> GetById(int id)
         {
             var client = await _context.Clients
+                .Include(c => c.User)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (client == null)
