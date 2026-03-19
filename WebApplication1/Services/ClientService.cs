@@ -39,87 +39,97 @@ namespace WebApplication1.Services
 
             var responseDto = MapToResponse(client);
 
-            
+
             return ServiceResult<ClientReponseDto>.Ok(responseDto);
 
         }
 
         public async Task<ServiceResult<ClientReponseDto>> Create(ClientCreateDto clientDto)
         {
-            
-                var emailExist = await _repository.EmailExist(clientDto.Email);
 
-                if (emailExist)
-                {
-                    return ServiceResult<ClientReponseDto>.Failure("Este e-mail já está cadastrado no sistema.");
-                }
+            var emailExist = await _repository.EmailExist(clientDto.Email);
 
-                 //Mapeamento DTO -> Model (Entidade)
-                var newClient = new Client
-                {
-                    Email = clientDto.Email,
-                    Nome = clientDto.Nome,
-                    Ativo = true,
-                    DataCadastro = DateTime.Now
-                };
+            if (emailExist)
+            {
+                return ServiceResult<ClientReponseDto>.Failure("Este e-mail já está cadastrado no sistema.");
+            }
 
-                await _repository.Add(newClient);
-                await _repository.SaveChangesAsync();
+            var newUser = new User
+            {
+                Email = clientDto.Email,
+                Nome = clientDto.Nome,
+                Ativo = true,
+                Password = "SenhaTemporaria",
+                DataCadastro = DateTime.Now
+            };
 
-                // 4. Mapeamento Model -> Response Dto
-                // Agora o newClient JÁ POSSUI o Id preenchido pelo banco
-                var response = new ClientReponseDto
-                {
-                    Id = newClient.Id,
-                    Nome = newClient.Nome,
-                    Email = newClient.Email,
-                    Ativo = newClient.Ativo,
-                    DataCadastro = newClient.DataCadastro
-                };
+            //Mapeamento DTO -> Model (Entidade)
+            var newClient = new Client
+            {
+                Email = clientDto.Email,
+                Nome = clientDto.Nome,
+                Ativo = true,
+                User = newUser,
+                DataCadastro = DateTime.Now
+            };
 
-                return ServiceResult<ClientReponseDto>.Ok(response);
-            
-            
+            await _repository.Add(newClient);
+            await _repository.SaveChangesAsync();
+
+            // 4. Mapeamento Model -> Response Dto
+            // Agora o newClient JÁ POSSUI o Id preenchido pelo banco
+            var response = new ClientReponseDto
+            {
+                Id = newClient.Id,
+                Nome = newClient.Nome,
+                Email = newClient.Email,
+                Ativo = newClient.Ativo,
+                DataCadastro = newClient.DataCadastro
+            };
+
+            return ServiceResult<ClientReponseDto>.Ok(response);
+
+
         }
 
         public async Task<ServiceResult<ClientReponseDto>> Update(ClientUpdateDto clientUpdateDto)
         {
-            
-                var existingClient = await _repository.GetById(clientUpdateDto.Id);
 
-                if (existingClient == null)
-                {
-                    return ServiceResult<ClientReponseDto>.Failure("Cliente não localizado");
-                }
+            var existingClient = await _repository.GetById(clientUpdateDto.Id);
 
-                //Comparando os dados, se forem identicos ele marca como sem alterações
-                if (existingClient.Nome == clientUpdateDto.Nome && 
-                    existingClient.Email == clientUpdateDto.Email && 
-                    existingClient.Ativo == clientUpdateDto.Ativo)
-                {
-                   
-                    return ServiceResult<ClientReponseDto>.NoChanges(MapToResponse(existingClient));
-                }
+            if (existingClient == null)
+            {
+                return ServiceResult<ClientReponseDto>.Failure("Cliente não localizado");
+            }
 
-                // 3. ATUALIZA as propriedades do objeto rastreado com os novos valores
-                existingClient.Nome = clientUpdateDto.Nome;
-                existingClient.Email = clientUpdateDto.Email;
-                existingClient.Ativo = clientUpdateDto.Ativo;
+            //Comparando os dados, se forem identicos ele marca como sem alterações
+            if (existingClient.Nome == clientUpdateDto.Nome &&
+                existingClient.Email == clientUpdateDto.Email &&
+                existingClient.Ativo == clientUpdateDto.Ativo)
+            {
 
-                // Criamos o DTO de resposta manualmente aqui
-                var responseDto = new ClientReponseDto
-                {
-                    Id = existingClient.Id,
-                    Nome = existingClient.Nome,
-                    Email = existingClient.Email,
-                    Ativo = existingClient.Ativo,
-                    DataCadastro = existingClient.DataCadastro
-                };
+                return ServiceResult<ClientReponseDto>.NoChanges(MapToResponse(existingClient));
+            }
 
-                await _repository.SaveChangesAsync();
-                return ServiceResult<ClientReponseDto>.Ok(responseDto);
+            // 3. ATUALIZA as propriedades do objeto rastreado com os novos valores
+            existingClient.Nome = clientUpdateDto.Nome;
+            existingClient.Email = clientUpdateDto.Email;
+            existingClient.Ativo = clientUpdateDto.Ativo;
 
-            
+            // Criamos o DTO de resposta manualmente aqui
+            var responseDto = new ClientReponseDto
+            {
+                Id = existingClient.Id,
+                Nome = existingClient.Nome,
+                Email = existingClient.Email,
+                Ativo = existingClient.Ativo,
+                DataCadastro = existingClient.DataCadastro
+            };
+
+            await _repository.SaveChangesAsync();
+            return ServiceResult<ClientReponseDto>.Ok(responseDto);
+
+
         }
 
         public async Task<Client> Delete(int id)

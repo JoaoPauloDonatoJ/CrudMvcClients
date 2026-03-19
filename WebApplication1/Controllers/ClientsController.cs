@@ -99,7 +99,7 @@ namespace WebApplication1.Controllers
             {
                 return NotFound();
             }
-            return View(client);
+            return View(client.Data);
         }
 
         // POST: Clients/Edit/5

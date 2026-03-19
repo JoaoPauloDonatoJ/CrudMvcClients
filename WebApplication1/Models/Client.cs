@@ -18,5 +18,8 @@ namespace WebApplication1.Models
 
         public DateTime DataCadastro { get; set; } = DateTime.Now;
 
+        public int UserId { get; set; } //Chave estrangeira para a entidade User
+        public User User { get; set; } //Navegação para a entidade User
+
     }
 }
