@@ -9,10 +9,12 @@ namespace WebApplication1.Services
     public class ClientService : IClientService
     {
         private readonly IClientRepository _repository;
+        private readonly IPasswordService _passwordService;
 
-        public ClientService(IClientRepository repository)
+        public ClientService(IClientRepository repository, IPasswordService passwordService)
         {
             _repository = repository;
+            _passwordService = passwordService;
         }
 
         public async Task<IEnumerable<ClientReponseDto>> GetAll()
@@ -59,7 +61,7 @@ namespace WebApplication1.Services
                 Email = clientDto.Email,
                 Nome = clientDto.Nome,
                 Ativo = true,
-                Password = "SenhaTemporaria",
+                Password = await _passwordService.HashPassword(clientDto.Password),
                 DataCadastro = DateTime.Now
             };
 
