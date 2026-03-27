@@ -52,7 +52,7 @@ namespace WebApplication1.Controllers
         // GET: Clients/Create
         public IActionResult Create()
         {
-            return View();
+            return View(new ClientCreateDto());
         }
 
         // POST: Clients/Create
@@ -82,7 +82,7 @@ namespace WebApplication1.Controllers
                     return RedirectToAction(nameof(Index));
                 
 
-                //return View(client);
+                
             
         }
 
