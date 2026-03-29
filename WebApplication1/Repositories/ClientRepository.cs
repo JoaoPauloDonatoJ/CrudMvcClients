@@ -31,7 +31,10 @@ namespace WebApplication1.Repositories
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (client == null)
-                throw new KeyNotFoundException("Cliente não localizado");
+            {
+                return null;
+            }
+                
 
             return client;
         }
