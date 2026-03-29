@@ -10,11 +10,13 @@ namespace WebApplication1.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IPasswordService _services;
+        private readonly IAuthService _authService;
 
-        public AccountController(AppDbContext context, IPasswordService service)
+        public AccountController(AppDbContext context, IPasswordService service, IAuthService authService)
         {
             _context = context;
             _services = service;
+            _authService = authService;
         }
 
         public IActionResult Index()
@@ -40,24 +42,14 @@ namespace WebApplication1.Controllers
                 return View(loginDto);
             }
 
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+            var result = await _authService.Authenticate(loginDto);
 
-            if (user == null)
+            if (!result.Success)
             {
-                ModelState.AddModelError("", "Email ou senha inválidos.");
-                return View(loginDto);
-
-            }
-
-            var isPasswordValid = await _services.VerifyPassword(loginDto.Password, user.Password);
-
-            if (!isPasswordValid)
-            {
-                //ModelState.AddModelError("", isPasswordValid.Message);
-                ModelState.AddModelError("", "E-mail ou senha inválidos.");
+                
+                ModelState.AddModelError("", result.Message);
                 return View(loginDto);
             }
-
 
             TempData["Success"] = "Usuário logado com sucesso!";
             //return RedirectToAction(nameof(Index));
