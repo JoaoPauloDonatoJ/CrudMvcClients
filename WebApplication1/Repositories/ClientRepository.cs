@@ -64,7 +64,7 @@ namespace WebApplication1.Repositories
             var client = await _context.Clients.FindAsync(id);
 
             _context.Clients.Remove(client);
-            await _context.SaveChangesAsync();
+            //await _context.SaveChangesAsync();
             return client;
         }
 

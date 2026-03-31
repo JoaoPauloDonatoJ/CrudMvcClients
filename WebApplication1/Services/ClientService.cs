@@ -10,11 +10,13 @@ namespace WebApplication1.Services
     {
         private readonly IClientRepository _repository;
         private readonly IPasswordService _passwordService;
+        private readonly IUserRepository _userRepository;
 
-        public ClientService(IClientRepository repository, IPasswordService passwordService)
+        public ClientService(IClientRepository repository, IPasswordService passwordService, IUserRepository userRepository)
         {
             _repository = repository;
             _passwordService = passwordService;
+            _userRepository = userRepository;
         }
 
         public async Task<IEnumerable<ClientReponseDto>> GetAll()
@@ -134,9 +136,31 @@ namespace WebApplication1.Services
 
         }
 
-        public async Task<Client> Delete(int id)
+        public async Task<ServiceResult<ClientReponseDto>> Delete(int id)
         {
-            return await _repository.Remove(id);
+            var client = await _repository.GetById(id);
+
+            if (client == null)
+            {
+                ServiceResult<ClientReponseDto>.Failure("Usuário não localizado! ");
+                return null;
+            }
+
+            var response = new ClientReponseDto
+            {
+                Id = client.Id,
+                Nome = client.Nome,
+                Email = client.Email,
+                Ativo = client.Ativo,
+                DataCadastro = client.DataCadastro
+            };
+
+            //await _repository.Remove(user.Id);
+            await _repository.Remove(id);
+            await _userRepository.Remove(client.UserId);
+            await _repository.SaveChangesAsync();
+            return ServiceResult<ClientReponseDto>.Ok(response);
+
         }
 
         public async Task<bool> EmailExist(string email)
