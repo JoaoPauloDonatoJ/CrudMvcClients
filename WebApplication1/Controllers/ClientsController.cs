@@ -167,13 +167,14 @@ namespace WebApplication1.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var client = await _context.Clients.FindAsync(id);
-            if (client != null)
+
+            if (!ModelState.IsValid)
             {
-                _context.Clients.Remove(client);
+                return View();
             }
 
-            await _context.SaveChangesAsync();
+            await _services.Delete(id);
+            TempData["Success"] = "Cliente deletado com sucesso!";
             return RedirectToAction(nameof(Index));
         }
 

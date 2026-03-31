@@ -13,7 +13,7 @@ namespace WebApplication1.Services
         Task<ServiceResult<ClientReponseDto>> Create(ClientCreateDto clientCreateDto);
         //Task<ServiceResult<Client>> Update(Client client);
         Task<ServiceResult<ClientReponseDto>> Update(ClientUpdateDto client);
-        Task<Client> Delete(int id);
+        Task<ServiceResult<ClientReponseDto>> Delete(int id);
         Task<bool> EmailExist(string email);
     }
 }
