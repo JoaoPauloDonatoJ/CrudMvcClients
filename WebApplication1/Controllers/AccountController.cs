@@ -51,13 +51,25 @@ namespace WebApplication1.Controllers
                 return View(loginDto);
             }
 
+            //Autenticação bem-sucedida, armazenar informações do usuário na sessão
+            HttpContext.Session.SetString("UsuarioNome", result.Data.Nome);
+            HttpContext.Session.SetInt32("UserId", result.Data.Id);
+
             TempData["Success"] = "Usuário logado com sucesso!";
-            //return RedirectToAction(nameof(Index));
             return RedirectToAction("Index", "Home");
 
+        }
 
+        //Inserindo Logout Direto na Controller pois não há logíca de Logout até o momento
+        public IActionResult Logout()
+        {
+            HttpContext.Session.Clear();
 
+            TempData["Success"] = "Você saiu do sistema com sucesso.";
 
+            // 3. Redireciona para a Home ou para a tela de Login
+            //return RedirectToAction("Index", "Home");
+            return RedirectToAction("Login", "Account");
         }
     }
 }
