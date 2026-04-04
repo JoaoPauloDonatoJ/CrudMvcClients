@@ -3,6 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.DTOs;
 using WebApplication1.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebApplication1.Controllers
 {
@@ -19,13 +23,16 @@ namespace WebApplication1.Controllers
             _authService = authService;
         }
 
+        [AllowAnonymous]
         public IActionResult Index()
         {
             return View();
         }
 
-        public IActionResult Login()
+        [AllowAnonymous]
+        public IActionResult Login(string? returnUrl = null)
         {
+            ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
@@ -33,8 +40,9 @@ namespace WebApplication1.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginDto loginDto)
+        public async Task<IActionResult> Login(LoginDto loginDto, string? returnUrl = null)
         {
 
             if (!ModelState.IsValid)
@@ -56,14 +64,42 @@ namespace WebApplication1.Controllers
             HttpContext.Session.SetInt32("UserId", result.Data.Id);
 
             TempData["Success"] = "Usuário logado com sucesso!";
+            
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, result.Data.Nome),
+                new Claim(ClaimTypes.NameIdentifier, result.Data.Id.ToString())
+                // Dica: Futuramente você adicionará a Claim de Role aqui
+                // new Claim(ClaimTypes.Role, result.Data.Perfil)
+            };
+
+            //Criando a Identidade do Usuário com as Claims e o Esquema de Autenticação
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            //Informando ao ASP.NET Core que o usuário está autenticado e quais são suas Claims
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
+
+            if (!string.IsNullOrEmpty(returnUrl))
+            {
+                return LocalRedirect(returnUrl);
+            }
+
             return RedirectToAction("Index", "Home");
 
         }
 
+       
         //Inserindo Logout Direto na Controller pois não há logíca de Logout até o momento
-        public IActionResult Logout()
+        [HttpPost]
+        public async Task<IActionResult> Logout()
         {
             HttpContext.Session.Clear();
+
+            // 2. Remove o Cookie de Autenticação do navegador
+            //passando o esquema de autenticação que definimos no Program.cs
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
             TempData["Success"] = "Você saiu do sistema com sucesso.";
 
