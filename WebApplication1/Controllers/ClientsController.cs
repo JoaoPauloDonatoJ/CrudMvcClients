@@ -10,6 +10,7 @@ using WebApplication1.Models;
 using WebApplication1.Services;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxTokenParser;
 using WebApplication1.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebApplication1.Controllers
 {
@@ -25,12 +26,14 @@ namespace WebApplication1.Controllers
         }
 
         // GET: Clients
+        [Authorize]
         public async Task<IActionResult> Index()
         {
             var clients = await _services.GetAll();
             return View(clients);
         }
 
+        [Authorize]
         // GET: Clients/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -49,6 +52,7 @@ namespace WebApplication1.Controllers
             return View(client.Data);
         }
 
+        [Authorize]
         // GET: Clients/Create
         public IActionResult Create()
         {
@@ -58,6 +62,7 @@ namespace WebApplication1.Controllers
         // POST: Clients/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ClientCreateDto clientDto)
@@ -87,6 +92,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: Clients/Edit/5
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -105,6 +111,7 @@ namespace WebApplication1.Controllers
         // POST: Clients/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, ClientUpdateDto clientUpdateDto)
@@ -142,10 +149,11 @@ namespace WebApplication1.Controllers
 
             
         }
-            
-        
+
+
 
         // GET: Clients/Delete/5
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -163,6 +171,7 @@ namespace WebApplication1.Controllers
         }
 
         // POST: Clients/Delete/5
+        [Authorize]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
