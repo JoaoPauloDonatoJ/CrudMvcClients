@@ -1,5 +1,5 @@
 ﻿@using Microsoft.AspNetCore.Http
-@inject IHttpContextAccessor HttpContextAccessor
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -40,8 +40,7 @@
                     @* --- LÓGICA DE SESSÃO AQUI --- *@
                     <ul class="navbar-nav">
                         @{
-                            // Tenta recuperar o nome do usuário da sessão
-                            var nomeUsuario = HttpContextAccessor.HttpContext?.Session.GetString("UsuarioNome");
+                            var nomeUsuario = User.Identity.Name;
                         }
 
                         @if (!string.IsNullOrEmpty(nomeUsuario))
