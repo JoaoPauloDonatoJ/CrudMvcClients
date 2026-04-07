@@ -29,8 +29,9 @@ namespace WebApplication1.Services
                 Nome = c.Nome,
                 Email = c.Email,
                 Ativo = c.Ativo,
-                DataCadastro = c.DataCadastro
-            }).ToList();
+                DataCadastro = c.DataCadastro,
+                Profiles = c.User.UserProfiles.Select(up => up.Profile.Nome).ToList(),
+            });
         }
 
 
@@ -64,7 +65,12 @@ namespace WebApplication1.Services
                 Nome = clientDto.Nome,
                 Ativo = true,
                 Password = await _passwordService.HashPassword(clientDto.Password),
-                DataCadastro = DateTime.Now
+                DataCadastro = DateTime.Now,
+                
+                UserProfiles = new List<UserProfile>
+                {
+                  new UserProfile { ProfileId = 3 } //Id do perfil "Cliente"
+                }
             };
 
             //Mapeamento DTO -> Model (Entidade)
@@ -77,6 +83,7 @@ namespace WebApplication1.Services
                 DataCadastro = DateTime.Now
             };
 
+           
             await _repository.Add(newClient);
             await _repository.SaveChangesAsync();
 
@@ -89,6 +96,7 @@ namespace WebApplication1.Services
                 Email = newClient.Email,
                 Ativo = newClient.Ativo,
                 DataCadastro = newClient.DataCadastro
+
             };
 
             return ServiceResult<ClientReponseDto>.Ok(response);
@@ -176,7 +184,8 @@ namespace WebApplication1.Services
                 Nome = client.Nome,
                 Email = client.Email,
                 Ativo = client.Ativo,
-                DataCadastro = client.DataCadastro
+                DataCadastro = client.DataCadastro,
+                Profiles = client.User.UserProfiles.Select(up => up.Profile.Nome).ToList(),
             };
         }
     }

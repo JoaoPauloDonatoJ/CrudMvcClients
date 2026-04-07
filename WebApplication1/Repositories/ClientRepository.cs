@@ -19,6 +19,8 @@ namespace WebApplication1.Repositories
         {
             return await _context.Clients
                 .Include(c => c.User)
+                    .ThenInclude(u => u.UserProfiles)
+                        .ThenInclude(up => up.Profile)
                 .AsNoTracking()
                 .ToListAsync();
         }
@@ -28,6 +30,8 @@ namespace WebApplication1.Repositories
         {
             var client = await _context.Clients
                 .Include(c => c.User)
+                .ThenInclude(u => u.UserProfiles)
+                        .ThenInclude(up => up.Profile)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (client == null)

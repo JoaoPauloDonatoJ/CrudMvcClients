@@ -22,5 +22,7 @@ namespace WebApplication1.Models
 
         public Client Client { get; set; } //Navegação para a entidade Client
 
+        public ICollection<UserProfile> UserProfiles { get; set; } = new List<UserProfile>(); //Navegação para a entidade UserProfile
+
     }
 }
