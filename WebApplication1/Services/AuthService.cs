@@ -38,7 +38,8 @@ namespace WebApplication1.Services
                 Nome = user.Nome,
                 Email = user.Email,
                 Ativo = user.Ativo,
-                DataCadastro = user.DataCadastro
+                DataCadastro = user.DataCadastro,
+                Profiles = user.UserProfiles.Select(up => up.Profile.Nome).ToList() // Mapeia os nomes aqui
             };
 
             return ServiceResult<UserResponseDto>.Ok(response);

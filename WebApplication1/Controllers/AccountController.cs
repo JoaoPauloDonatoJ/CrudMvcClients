@@ -1,12 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using WebApplication1.Data;
 using WebApplication1.DTOs;
+using WebApplication1.Models;
 using WebApplication1.Services;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 
 namespace WebApplication1.Controllers
 {
@@ -68,10 +69,15 @@ namespace WebApplication1.Controllers
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, result.Data.Nome),
-                new Claim(ClaimTypes.NameIdentifier, result.Data.Id.ToString())
-                // Dica: Futuramente você adicionará a Claim de Role aqui
-                // new Claim(ClaimTypes.Role, result.Data.Perfil)
+                new Claim(ClaimTypes.NameIdentifier, result.Data.Id.ToString()),
+                new Claim(ClaimTypes.Email, result.Data.Email)
+
             };
+
+            foreach (var perfil in result.Data.Profiles) // Supondo que Profiles seja uma List<string> ou similar
+            {
+                claims.Add(new Claim(ClaimTypes.Role, perfil));
+            }
 
             //Criando a Identidade do Usuário com as Claims e o Esquema de Autenticação
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
