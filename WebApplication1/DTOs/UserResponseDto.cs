@@ -10,7 +10,9 @@
 
         public bool Ativo { get; set; }
 
-        public DateTime DataCadastro { get; set; } 
+        public DateTime DataCadastro { get; set; }
+
+        public List<string> Profiles { get; set; } = new List<string>();
 
     }
 }

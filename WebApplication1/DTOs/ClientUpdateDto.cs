@@ -14,5 +14,7 @@ namespace WebApplication1.DTOs
         //[EmailAddress(ErrorMessage = "O email deve ser um endereço de email válido.")]
         public string Email { get; set; }
         public bool Ativo { get; set; }
+
+        public List<int> ProfileIds { get; set; } = new List<int>();
     }
 }

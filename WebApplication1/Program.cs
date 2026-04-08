@@ -21,6 +21,7 @@ builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 
 //Add Services Session
 builder.Services.AddDistributedMemoryCache();

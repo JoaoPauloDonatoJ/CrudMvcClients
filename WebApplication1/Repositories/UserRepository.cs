@@ -14,7 +14,10 @@ namespace WebApplication1.Repositories
         }
         public async Task<User?> GetByEmail(string email)
         {
-            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email);
+            var user = await _context.Users.AsNoTracking()
+                .Include(u => u.UserProfiles)
+                    .ThenInclude(up => up.Profile)
+                .FirstOrDefaultAsync(u => u.Email == email);
 
             if (user == null)
             {

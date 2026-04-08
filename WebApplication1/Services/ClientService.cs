@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pag
 using WebApplication1.Models;
 using WebApplication1.Repositories;
 using WebApplication1.DTOs;
+using Microsoft.AspNetCore.Http;
 
 namespace WebApplication1.Services
 {
@@ -11,12 +12,21 @@ namespace WebApplication1.Services
         private readonly IClientRepository _repository;
         private readonly IPasswordService _passwordService;
         private readonly IUserRepository _userRepository;
+        private readonly IProfileRepository _profileRepository;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ClientService(IClientRepository repository, IPasswordService passwordService, IUserRepository userRepository)
+        public ClientService
+            (IClientRepository repository,
+            IPasswordService passwordService,
+            IUserRepository userRepository,
+            IProfileRepository profileRepository,
+            IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _passwordService = passwordService;
             _userRepository = userRepository;
+            _profileRepository = profileRepository;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<IEnumerable<ClientReponseDto>> GetAll()
@@ -66,7 +76,7 @@ namespace WebApplication1.Services
                 Ativo = true,
                 Password = await _passwordService.HashPassword(clientDto.Password),
                 DataCadastro = DateTime.Now,
-                
+
                 UserProfiles = new List<UserProfile>
                 {
                   new UserProfile { ProfileId = 3 } //Id do perfil "Cliente"
@@ -83,7 +93,7 @@ namespace WebApplication1.Services
                 DataCadastro = DateTime.Now
             };
 
-           
+
             await _repository.Add(newClient);
             await _repository.SaveChangesAsync();
 
@@ -106,7 +116,7 @@ namespace WebApplication1.Services
 
         public async Task<ServiceResult<ClientReponseDto>> Update(ClientUpdateDto clientUpdateDto)
         {
-
+            // 1. Busca o cliente com os Includes (Tracking habilitado)
             var existingClient = await _repository.GetById(clientUpdateDto.Id);
 
             if (existingClient == null)
@@ -114,33 +124,66 @@ namespace WebApplication1.Services
                 return ServiceResult<ClientReponseDto>.Failure("Cliente não localizado");
             }
 
-            //Comparando os dados, se forem identicos ele marca como sem alterações
+            // 2. Preparamos os IDs atuais para comparação
+            var currentProfileIds = existingClient.User.UserProfiles.Select(up => up.ProfileId).ToList();
+
+            // Verificamos se houve mudança nos perfis (comparando as listas de IDs)
+            // Usamos SequenceEqual com OrderBy para garantir que a ordem não afete a comparação
+            bool profilesChanged = !currentProfileIds.OrderBy(id => id)
+                                    .SequenceEqual(clientUpdateDto.ProfileIds.OrderBy(id => id));
+
+            // Verificamos se algo mudou no objeto geral
             if (existingClient.Nome == clientUpdateDto.Nome &&
                 existingClient.Email == clientUpdateDto.Email &&
-                existingClient.Ativo == clientUpdateDto.Ativo)
+                existingClient.Ativo == clientUpdateDto.Ativo &&
+                !profilesChanged)
             {
-
                 return ServiceResult<ClientReponseDto>.NoChanges(MapToResponse(existingClient));
             }
 
-            // 3. ATUALIZA as propriedades do objeto rastreado com os novos valores
+            // 3. Se houve mudança de perfil, validamos se é Admin
+            if (profilesChanged)
+            {
+                var usuarioLogadoIsAdmin = _httpContextAccessor.HttpContext.User.IsInRole("Admin");
+
+                if (!usuarioLogadoIsAdmin)
+                {
+                    return ServiceResult<ClientReponseDto>.Failure("Apenas administradores podem alterar perfis de acesso.");
+                }
+
+                // A. REMOÇÃO: Percorremos o que está no BANCO.
+                // Se o perfil do banco não está na lista que veio da tela, removemos.
+                foreach (var existingProfile in existingClient.User.UserProfiles.ToList()) // ToList() evita erro de coleção modificada
+                {
+                    if (!clientUpdateDto.ProfileIds.Contains(existingProfile.ProfileId))
+                    {
+                        existingClient.User.UserProfiles.Remove(existingProfile);
+                    }
+                }
+
+                // B. ADIÇÃO: Percorremos o que veio da TELA.
+                // Se o ID da tela não está no banco, adicionamos um novo objeto.
+                foreach (var profileId in clientUpdateDto.ProfileIds)
+                {
+                    if (!currentProfileIds.Contains(profileId))
+                    {
+                        existingClient.User.UserProfiles.Add(new UserProfile
+                        {
+                            ProfileId = profileId,
+                            UserId = existingClient.UserId // O EF costuma preencher só com a coleção, mas é boa prática
+                        });
+                    }
+                }
+            }
+
+            // 4. Atualiza propriedades básicas
             existingClient.Nome = clientUpdateDto.Nome;
             existingClient.Email = clientUpdateDto.Email;
             existingClient.Ativo = clientUpdateDto.Ativo;
 
-            // Criamos o DTO de resposta manualmente aqui
-            var responseDto = new ClientReponseDto
-            {
-                Id = existingClient.Id,
-                Nome = existingClient.Nome,
-                Email = existingClient.Email,
-                Ativo = existingClient.Ativo,
-                DataCadastro = existingClient.DataCadastro
-            };
-
+            // 5. Salva as mudanças (O EF gerará os INSERTS e DELETES automaticamente)
             await _repository.SaveChangesAsync();
-            return ServiceResult<ClientReponseDto>.Ok(responseDto);
-
+            return ServiceResult<ClientReponseDto>.Ok(MapToResponse(existingClient));
 
         }
 
@@ -185,7 +228,8 @@ namespace WebApplication1.Services
                 Email = client.Email,
                 Ativo = client.Ativo,
                 DataCadastro = client.DataCadastro,
-                Profiles = client.User.UserProfiles.Select(up => up.Profile.Nome).ToList(),
+                Profiles = client.User.UserProfiles.Select(up => up.Profile?.Nome ?? "Perfil não carregado")
+                .ToList(),
             };
         }
     }
