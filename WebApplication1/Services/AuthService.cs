@@ -39,6 +39,8 @@ namespace WebApplication1.Services
                 Email = user.Email,
                 Ativo = user.Ativo,
                 DataCadastro = user.DataCadastro,
+                Excluido = user.Excluido,
+                DataExclusao = user.DataExclusao,
                 Profiles = user.UserProfiles.Select(up => up.Profile.Nome).ToList() // Mapeia os nomes aqui
             };
 

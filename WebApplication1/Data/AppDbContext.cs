@@ -28,10 +28,13 @@ namespace WebApplication1.Data
 
             // Configura o relacionamento 1:1
             modelBuilder.Entity<Client>()
+                .HasQueryFilter(c => !c.Excluido) // Filtro global para excluir clientes "deletados"
+                .HasQueryFilter(u => !u.Excluido) // Filtro global para excluir usuários "deletados"
                 .HasOne(c => c.User)           // Client tem um User
                 .WithOne(u => u.Client)        // User tem um Client
                 .HasForeignKey<Client>(c => c.UserId) // A chave estrangeira está em Client
-                .IsRequired();                 // Torna o relacionamento obrigatório
+                .IsRequired();                // Torna o relacionamento obrigatório
+                
 
             modelBuilder.Entity<UserProfile>()
             .HasKey(up => new { up.UserId, up.ProfileId });

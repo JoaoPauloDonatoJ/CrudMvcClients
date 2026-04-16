@@ -20,6 +20,10 @@ namespace WebApplication1.Models
 
         public DateTime DataCadastro { get; set; } = DateTime.Now;
 
+        public DateTime? DataExclusao { get; set; }
+
+        public bool Excluido { get; set; } = false;
+
         public Client Client { get; set; } //Navegação para a entidade Client
 
         public ICollection<UserProfile> UserProfiles { get; set; } = new List<UserProfile>(); //Navegação para a entidade UserProfile

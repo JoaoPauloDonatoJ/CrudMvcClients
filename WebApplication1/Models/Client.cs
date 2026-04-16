@@ -18,6 +18,10 @@ namespace WebApplication1.Models
 
         public DateTime DataCadastro { get; set; } = DateTime.Now;
 
+        public DateTime? DataExclusao { get; set; }
+
+        public bool Excluido { get; set; } = false;
+
         public int UserId { get; set; } //Chave estrangeira para a entidade User
         public User User { get; set; } //Navegação para a entidade User
 
