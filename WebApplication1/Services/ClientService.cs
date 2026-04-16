@@ -40,6 +40,8 @@ namespace WebApplication1.Services
                 Email = c.Email,
                 Ativo = c.Ativo,
                 DataCadastro = c.DataCadastro,
+                Excluido = c.Excluido,
+                DataExclusao = c.DataExclusao,
                 Profiles = c.User.UserProfiles.Select(up => up.Profile.Nome).ToList(),
             });
         }
@@ -105,7 +107,9 @@ namespace WebApplication1.Services
                 Nome = newClient.Nome,
                 Email = newClient.Email,
                 Ativo = newClient.Ativo,
-                DataCadastro = newClient.DataCadastro
+                DataCadastro = newClient.DataCadastro,
+                Excluido = newClient.Excluido,
+                DataExclusao = newClient.DataExclusao
 
             };
 
@@ -203,12 +207,24 @@ namespace WebApplication1.Services
                 Nome = client.Nome,
                 Email = client.Email,
                 Ativo = client.Ativo,
-                DataCadastro = client.DataCadastro
+                DataCadastro = client.DataCadastro,
+                Excluido = client.Excluido,
+                DataExclusao = client.DataExclusao
             };
 
-            //await _repository.Remove(user.Id);
-            await _repository.Remove(id);
-            await _userRepository.Remove(client.UserId);
+            client.Excluido = true;
+            client.DataExclusao = DateTime.Now;
+
+            client.User.Excluido = true;
+            client.User.DataExclusao = DateTime.Now;
+            
+
+            //await _repository.Remove(id);
+            await _repository.Update(client);
+
+            //await _userRepository.Remove(client.UserId);
+            await _userRepository.Update(client.User);
+
             await _repository.SaveChangesAsync();
             return ServiceResult<ClientReponseDto>.Ok(response);
 
@@ -228,6 +244,8 @@ namespace WebApplication1.Services
                 Email = client.Email,
                 Ativo = client.Ativo,
                 DataCadastro = client.DataCadastro,
+                Excluido = client.Excluido,
+                DataExclusao = client.DataExclusao,
                 Profiles = client.User.UserProfiles.Select(up => up.Profile?.Nome ?? "Perfil não carregado")
                 .ToList(),
             };
