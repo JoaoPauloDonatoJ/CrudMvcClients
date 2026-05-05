@@ -6,6 +6,7 @@ using System;
 using System.ClientModel;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using WebApplication1.Data;
 using WebApplication1.DTOs;
@@ -207,10 +208,20 @@ namespace WebApplication1.Controllers
                 return NotFound();
             }
 
+
             var client = await _services.GetById(id.Value);
+
             if (!client.Success)
             {
                 return NotFound(client.Message);
+            }
+
+            var loggedUserID = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if(client.Data.UserId.ToString() == loggedUserID)
+            {
+                TempData["Error"] = "Você não pode excluir sua própria conta!";
+                return RedirectToAction(nameof(Index));
             }
 
             return View(client.Data);
@@ -226,6 +237,22 @@ namespace WebApplication1.Controllers
             if (!ModelState.IsValid)
             {
                 return View();
+            }
+
+            var result = await _services.GetById(id);
+            if (!result.Success)
+            {
+                return NotFound(result.Message);
+            }
+
+            var client = result.Data;
+
+            var loggedUserID = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (client.UserId.ToString() == loggedUserID)
+            {
+                TempData["Error"] = "Você não pode excluir sua própria conta!";
+                return RedirectToAction(nameof(Index));
             }
 
             await _services.Delete(id);
