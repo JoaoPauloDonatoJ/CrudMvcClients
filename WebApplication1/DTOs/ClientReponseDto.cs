@@ -11,7 +11,7 @@ namespace WebApplication1.DTOs
         public DateTime DataCadastro { get; set; }
         public DateTime? DataExclusao { get; set; }
         public bool Excluido { get; set; }
-
         public List<string> Profiles { get; set; }
+        public int UserId { get; set; }
     }
 }

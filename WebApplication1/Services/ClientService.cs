@@ -43,6 +43,7 @@ namespace WebApplication1.Services
                 Excluido = c.Excluido,
                 DataExclusao = c.DataExclusao,
                 Profiles = c.User.UserProfiles.Select(up => up.Profile.Nome).ToList(),
+                UserId = c.User.Id
             });
         }
 
@@ -100,20 +101,7 @@ namespace WebApplication1.Services
             await _repository.SaveChangesAsync();
 
             // 4. Mapeamento Model -> Response Dto
-            // Agora o newClient JÁ POSSUI o Id preenchido pelo banco
-            var response = new ClientReponseDto
-            {
-                Id = newClient.Id,
-                Nome = newClient.Nome,
-                Email = newClient.Email,
-                Ativo = newClient.Ativo,
-                DataCadastro = newClient.DataCadastro,
-                Excluido = newClient.Excluido,
-                DataExclusao = newClient.DataExclusao
-
-            };
-
-            return ServiceResult<ClientReponseDto>.Ok(response);
+            return ServiceResult<ClientReponseDto>.Ok(MapToResponse(newClient));
 
 
         }
@@ -209,7 +197,9 @@ namespace WebApplication1.Services
                 Ativo = client.Ativo,
                 DataCadastro = client.DataCadastro,
                 Excluido = client.Excluido,
-                DataExclusao = client.DataExclusao
+                DataExclusao = client.DataExclusao,
+                Profiles = client.User.UserProfiles.Select(up => up.Profile.Nome).ToList(),
+                UserId = client.UserId
             };
 
             client.Excluido = true;
@@ -248,6 +238,7 @@ namespace WebApplication1.Services
                 DataExclusao = client.DataExclusao,
                 Profiles = client.User.UserProfiles.Select(up => up.Profile?.Nome ?? "Perfil não carregado")
                 .ToList(),
+                UserId = client.UserId
             };
         }
     }
